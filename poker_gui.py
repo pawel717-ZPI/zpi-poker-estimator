@@ -1,5 +1,6 @@
 from tkinter import *
-import bot
+
+import poker
 
 root = Tk()
 
@@ -22,7 +23,7 @@ class PokerGUI:
         self.display_board()
         self.display_hand()
 
-        (self.points, myHand, board) = bot.game(self.hand, self.board, self.hands)
+        (self.points, myHand, board) = poker.game(self.hand, self.board, self.hands)
 
         self.display_points()
 
@@ -65,7 +66,7 @@ class PokerGUI:
 
     def display_board(self):
 
-        board = bot.board()
+        board = poker.board()
         self.board = board
 
         for i in range(len(board)):
@@ -73,14 +74,14 @@ class PokerGUI:
 
     def display_hand(self):
 
-        hand = bot.myHand()
+        hand = poker.myHand()
         self.hand = hand
 
         for i in range(len(hand)):
             Label(self.card_frame, image=self.card_dict[hand[i]], relief='raised').grid(row=2, column=i, pady=10)
 
     def display_other_hands(self):
-        hands = bot.anotherHands()
+        hands = poker.anotherHands()
         self.hands = hands
 
         col = 0
@@ -99,5 +100,5 @@ class PokerGUI:
 
 pokerGUI = PokerGUI(root)
 
-print(pokerGUI.card_dict)
+# print(pokerGUI.card_dict)
 root.mainloop()
