@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/poker-simulator.iml" filepath="$PROJECT_DIR$/.idea/poker-simulator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/zpi-poker-estimator.iml" filepath="$PROJECT_DIR$/.idea/zpi-poker-estimator.iml" />
     </modules>
   </component>
 </project>
