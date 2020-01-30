@@ -2,17 +2,6 @@ from zpi.poker.utils.card import pick_unused_card, fill_community_card, pypoker_
 from zpi.poker.logic.gamelogic import checkAllCombinations
 
 
-def estimate_win_rate_pypoker(nb_simulation, nb_player, hole_card, community_card=None):
-    if not community_card: community_card = []
-
-    # TODO temporary, map pypoker cards to our cards representation
-    hole_card = [pypoker_card_to_my_card(s) for s in hole_card]
-    community_card = [pypoker_card_to_my_card(s) for s in community_card]
-
-    win_count = sum([montecarlo_simulation(nb_player, hole_card, community_card) for _ in range(nb_simulation)])
-    return 1.0 * win_count / nb_simulation
-
-
 def estimate_win_rate(nb_simulation, nb_player, hole_card, community_card=None):
     if not community_card: community_card = []
 
