@@ -1,66 +1,61 @@
 from pypokerengine.players import BasePokerPlayer
 
-from zpi.poker.bot import estimate_win_rate
+from zpi.poker.bot.win_evaluator import estimate_win_rate
 
 
-class MyPokerBot(BasePokerPlayer):
-    def __init__(self):
+class PokerBot(BasePokerPlayer):
+    def __init__(self, hole, num_players, uid):
         super().__init__()
-        self.wins = 0
-        self.losses = 0
+        self.my_hole = hole
+        self.num_players = num_players
+        self.uid = uid
+        self.done_action = None
 
-    def declare_action(self, valid_actions, hole_card, round_state):
+    def declare_action(self, valid_actions, hole_cards, community_cards):
         # Estimate the win rate
-        win_rate = estimate_win_rate(1000, self.num_players, hole_card, round_state['community_card'])
+        win_rate = estimate_win_rate(1000, self.num_players, hole_cards, community_cards)
 
-        amount = None
+        self.amount = None
+        self.done_action = 'fold'
 
         # If the win rate is large enough, then raise
         win_rate = win_rate * (self.num_players - 1)
         if win_rate > 0.5:
-            # raise_amount_options = [item for item in valid_actions if item['action'] == 'raise'][0]['amount']
-            # if win_rate > 0.95:
-            #     # If it is extremely likely to win, then raise as much as possible
-            #     action = 'raise'
-            #     amount = raise_amount_options['max']
-            # elif win_rate > 0.90:
-            #     # If it is extremely likely to win, then raise as much as possible
-            #     action = 'raise'
-            #     amount = raise_amount_options['max'] / 2
-            # elif win_rate > 0.85:
-            #     # If it is likely to win, then raise by the minimum amount possible
-            #     action = 'raise'
-            #     amount = raise_amount_options['min']
-            # else:
-            #     # If there is a chance to win, then call
-            #     action = 'call'
-            action = 'call'
+            raise_options = [item for item in valid_actions if item['action'] == 'raise']
+            if raise_options.__len__() != 0:
+                self.check_raise_action(raise_options, win_rate)
         else:
-            # Check whether it is possible to call
-            can_call = len([item for item in valid_actions if item['action'] == 'call']) > 0
-            call_amount = [item for item in valid_actions if item['action'] == 'call'][0]['amount']
-            action = 'call' if can_call and call_amount == 0 else 'fold'
+            self.check_call_action(valid_actions)
 
         # Set the amount
-        if amount is None:
-            items = [item for item in valid_actions if item['action'] == action]
-            amount = items[0]['amount']
+        if self.amount is None:
+            items = [item for item in valid_actions if item['action'] == self.done_action]
+            self.amount = items[0]['amount']
 
-        return action, amount
+        return {'action': self.done_action, 'amount': self.amount, 'uid': self.uid}
 
-    def receive_game_start_message(self, game_info):
-        self.num_players = game_info['player_num']
+    def check_raise_action(self, raise_options, win_rate):
+        if win_rate > 0.95 and raise_options is not None:
+            # If it is extremely likely to win, then raise as much as possible
+            self.done_action = 'raise'
+            self.amount = raise_options[0]['amount']['max']
+        elif win_rate > 0.90 and raise_options is not None:
+            # If it is extremely likely to win, then raise as much as possible
+            self.done_action = 'raise'
+            self.amount = raise_options[0]['amount']['max'] / 2
+        elif win_rate > 0.85 and raise_options is not None:
+            # If it is likely to win, then raise by the minimum amount possible
+            self.done_action = 'raise'
+            self.amount = raise_options[0]['amount']['min']
+        else:
+            # If there is a chance to win, then call
+            self.done_action = 'call'
 
-    def receive_round_start_message(self, round_count, hole_card, seats):
-        pass
-
-    def receive_street_start_message(self, street, round_state):
-        pass
-
-    def receive_game_update_message(self, action, round_state):
-        pass
-
-    def receive_round_result_message(self, winners, hand_info, round_state):
-        is_winner = self.uuid in [item['uuid'] for item in winners]
-        self.wins += int(is_winner)
-        self.losses += int(not is_winner)
+    def check_call_action(self, valid_actions):
+        # Check whether it is possible to call
+        can_call = len([item for item in valid_actions if item['action'] == 'call']) > 0
+        call_amount = [item for item in valid_actions if item['action'] == 'call'][0]['amount']
+        if can_call and call_amount <= 10:
+            self.done_action = 'call'
+        else:
+            self.done_action = 'fold'

@@ -1,7 +1,9 @@
-from enum import auto, Enum
+from enum import Enum
 
 
 class AppState(Enum):
-    READY = auto
-    GAME_FINISHED = auto
-    PLAYING = auto
+    READY = 0
+    GAME_FINISHED = 1
+    COMPUTER_PLAYING = 2
+    USER_PLAYING = 3
+    GAME_EVALUATE = 4

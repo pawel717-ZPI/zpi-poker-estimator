@@ -1,8 +1,9 @@
 import random
 
-from zpi.poker.bot.poker_bot import MyPokerBot
+from zpi.poker.bot.poker_bot import PokerBot
 from zpi.poker.logic import gamelogic
 from zpi.poker.logic.gamelogic import checkAllCombinations
+from zpi.poker.model.appstate import AppState
 
 
 def shuffle():
@@ -48,18 +49,46 @@ def anotherHands():
     return hands
 
 
-def game(myHand, board, anotherHands):
-    pokerBot = MyPokerBot()
-    pokerBot.num_players = 5
-    hole_card = anotherHands[0]
-    round_state = {'community_card': board}
-    # valid_actions = [{'action': 'fold', 'amount': 0}, {'action': 'call', 'amount': 10}, {'action': 'raise', 'amount': {'min': 15, 'max': 100}}]
-    valid_actions = [{'action': 'fold', 'amount': 0}, {'action': 'call', 'amount': 10}]
-    pokerBot.declare_action(valid_actions, hole_card, round_state)
+class Game:
+    def __init__(self, num_players=6):
+        self.num_players = num_players
+        computer_players_hands = anotherHands()
+        self.user_action = None
+        self.user_hand = myHand()
+        self.board = board()
+        self.computer_players = [PokerBot(computer_players_hands[i], num_players, uid=i) for i in
+                                 range(num_players - 1)]
+        self.players_iterator = iter(self.computer_players)
+        self.points = []
+        self.state = AppState.READY
 
+    def continue_game(self):
+        current_player = self.players_iterator.__next__()
+        return current_player.declare_action(self.get_valid_actions(), current_player.my_hole, self.board)
+
+    def get_valid_actions(self):
+        valid_actions = [{'action': 'fold', 'amount': 0}, {'action': 'call', 'amount': 10}]
+        return valid_actions
+
+    def evaluate(self):
+        cards = [(player.my_hole + self.board, player.uid) for player in self.computer_players if player.done_action == 'call']
+        if self.user_action == 'call':
+            cards.append((self.user_hand + self.board, "user"))
+        self.winner = None
+        max_points = 0
+
+        for j in range(len(cards)):
+            self.points.append(checkAllCombinations(cards[j][0]))
+            if self.points[j] > max_points:
+                max_points = self.points[j]
+                self.winner = cards[j][1]
+
+        return self.winner
+
+
+def game(myHand, board, anotherHands):
     points = []
-    cards = []
-    cards.append(myHand + board)
+    cards = [myHand + board]
     win = 0
     for l in range(len(anotherHands) + 1):
         points.append(0)
@@ -70,6 +99,7 @@ def game(myHand, board, anotherHands):
     for k in range(len(anotherHands) + 1):
         if points[k] == max(points):
             win = k
+
     return [points, myHand, board, win]
 
 

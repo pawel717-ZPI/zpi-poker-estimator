@@ -1,4 +1,4 @@
-from zpi.poker.utils.card_utils import pick_unused_card, fill_community_card, pypoker_card_to_my_card
+from zpi.poker.utils.card import pick_unused_card, fill_community_card, pypoker_card_to_my_card
 from zpi.poker.logic.gamelogic import checkAllCombinations
 
 
